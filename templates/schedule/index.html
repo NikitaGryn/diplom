@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Расписание — TaskPlanner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-calendar-week-fill me-2 text-info"></i>Расписание на неделю</h4>
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary btn-sm" id="prevWeekBtn">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <span class="text-muted small" id="weekLabel"></span>
+        <button class="btn btn-outline-secondary btn-sm" id="nextWeekBtn">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<div class="d-flex gap-3 align-items-start">
+    <!-- Schedule grid -->
+    <div class="flex-grow-1 overflow-auto">
+        <div id="scheduleGrid"></div>
+    </div>
+
+    <!-- Tasks sidebar -->
+    <div style="width: 220px; flex-shrink: 0;">
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 small"><i class="bi bi-list-task me-1"></i>Задачи</h6>
+                <span class="text-muted small">↔ тащи в слот</span>
+            </div>
+            <div id="taskSidebarList" class="p-2" style="max-height: 600px; overflow-y: auto;">
+                <div class="text-muted small text-center py-2">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="scheduleData" type="application/json">{{ tasks_json|safe }}</script>
+<script>
+const SERVER_TODAY = "{{ today|date:'Y-m-d' }}";
+const SERVER_WEEK_OFFSET = {{ week_offset }};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/schedule.js' %}"></script>
+{% endblock %}

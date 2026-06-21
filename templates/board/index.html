@@ -1,0 +1,753 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Доска задач — TaskPlanner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>Доска задач</h4>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm" onclick="openCreateModal('new')">
+            <i class="bi bi-plus-lg me-1"></i>Новая задача
+        </button>
+        <button class="chat-toggle-btn" id="chatToggleBtn" onclick="toggleChat()">
+            <i class="bi bi-chat-dots"></i> Ассистент
+        </button>
+    </div>
+</div>
+
+<div class="d-flex gap-3 align-items-start">
+
+<div class="flex-grow-1 overflow-hidden">
+<div class="kanban-board d-flex gap-3 overflow-auto pb-3">
+    <!-- Новые -->
+    <div class="kanban-column flex-shrink-0" style="width: 280px;">
+        <div class="column-header bg-secondary bg-opacity-25 rounded-top p-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-circle me-1"></i>Новые
+            </span>
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-secondary" id="count-new">{{ columns.new|length }}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="openCreateModal('new')" title="Добавить задачу">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kanban-cards bg-dark bg-opacity-50 rounded-bottom p-2"
+             id="column-new" data-status="new">
+            {% for task in columns.new %}
+                {% include 'board/_task_card.html' with task=task %}
+            {% endfor %}
+            {% if not columns.new %}
+            <div class="text-muted text-center small py-3 empty-placeholder">
+                <i class="bi bi-inbox"></i><br>Нет задач
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Запланированные -->
+    <div class="kanban-column flex-shrink-0" style="width: 280px;">
+        <div class="column-header bg-info bg-opacity-25 rounded-top p-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-calendar-check me-1"></i>Запланированные
+            </span>
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-info text-dark" id="count-planned">{{ columns.planned|length }}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="openCreateModal('planned')" title="Добавить задачу">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kanban-cards bg-dark bg-opacity-50 rounded-bottom p-2"
+             id="column-planned" data-status="planned">
+            {% for task in columns.planned %}
+                {% include 'board/_task_card.html' with task=task %}
+            {% endfor %}
+            {% if not columns.planned %}
+            <div class="text-muted text-center small py-3 empty-placeholder">
+                <i class="bi bi-inbox"></i><br>Нет задач
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- В работе -->
+    <div class="kanban-column flex-shrink-0" style="width: 280px;">
+        <div class="column-header bg-warning bg-opacity-25 rounded-top p-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-play-circle me-1"></i>В работе
+            </span>
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-warning text-dark" id="count-in_progress">{{ columns.in_progress|length }}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="openCreateModal('in_progress')" title="Добавить задачу">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kanban-cards bg-dark bg-opacity-50 rounded-bottom p-2"
+             id="column-in_progress" data-status="in_progress">
+            {% for task in columns.in_progress %}
+                {% include 'board/_task_card.html' with task=task %}
+            {% endfor %}
+            {% if not columns.in_progress %}
+            <div class="text-muted text-center small py-3 empty-placeholder">
+                <i class="bi bi-inbox"></i><br>Нет задач
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Выполненные -->
+    <div class="kanban-column flex-shrink-0" style="width: 280px;">
+        <div class="column-header bg-success bg-opacity-25 rounded-top p-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-check-circle me-1"></i>Выполненные
+            </span>
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-success" id="count-done">{{ columns.done|length }}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="openCreateModal('done')" title="Добавить задачу">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="kanban-cards bg-dark bg-opacity-50 rounded-bottom p-2"
+             id="column-done" data-status="done">
+            {% for task in columns.done %}
+                {% include 'board/_task_card.html' with task=task %}
+            {% endfor %}
+            {% if not columns.done %}
+            <div class="text-muted text-center small py-3 empty-placeholder">
+                <i class="bi bi-inbox"></i><br>Нет задач
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Chat panel -->
+<div id="chatPanel" class="chat-panel d-none" style="width:410px;flex-shrink:0;">
+    <div class="card chat-card d-flex flex-row" style="height:480px;overflow:hidden;">
+
+        <!-- Sidebar: conversation history -->
+        <div class="d-flex flex-column chat-sidebar" style="width:160px;flex-shrink:0;">
+            <div class="px-2 py-2 chat-sidebar-header d-flex align-items-center justify-content-between">
+                <span class="small fw-semibold" style="color:#9ea9b5">История</span>
+                <button class="btn btn-sm btn-link p-0" style="color:#9ea9b5" onclick="newConversation()" title="Новый чат">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+            <div class="overflow-auto flex-grow-1 py-1" id="conversationList"></div>
+        </div>
+
+        <!-- Main chat area -->
+        <div class="d-flex flex-column flex-grow-1" style="min-width:0;">
+            <!-- Chat header -->
+            <div class="px-3 py-2 chat-sidebar-header d-flex align-items-center justify-content-between" style="border-bottom:1px solid #2d3139;">
+                <span class="small fw-semibold text-truncate" id="chatTitle" style="color:#cbd5e1;max-width:180px;">Новый чат</span>
+                <button class="btn btn-sm btn-link p-0" style="color:#6b7280;font-size:0.7rem;" onclick="clearChat()" title="Очистить чат">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+            <!-- Quick action chips -->
+            <div class="chat-chips-bar">
+                <button class="chat-chip" onclick="quickSend('Что я сделал за последнюю неделю?')">Итоги</button>
+                <button class="chat-chip" onclick="quickSend('Проанализируй мою загруженность')">Анализ</button>
+                <button class="chat-chip" onclick="quickSend('Покажи мои цели')">Цели</button>
+                <button class="chat-chip" onclick="quickSend('Что мне делать прямо сейчас?')">Рекомендация</button>
+                <button class="chat-chip" onclick="quickSend('Покажи статистику по задачам')">Статистика</button>
+            </div>
+            <div class="p-2 overflow-auto flex-grow-1 chat-messages-area" id="chatMessages">
+            </div>
+            <div class="chat-input-bar d-flex align-items-center gap-2 px-3 py-2">
+                <input type="text" class="chat-input flex-grow-1" id="chatInput"
+                       placeholder="Написать сообщение..." autocomplete="off"
+                       onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage();}">
+                <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</div>
+
+<!-- Task Create/Edit Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taskModalTitle">
+                    <i class="bi bi-plus-circle me-2"></i>Новая задача
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId" value="">
+                    <input type="hidden" id="taskInitialStatus" value="new">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Название <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="taskTitle" required placeholder="Название задачи">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Описание</label>
+                            <textarea class="form-control" id="taskDescription" rows="2" placeholder="Описание задачи"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Категория</label>
+                            <select class="form-select" id="taskCategory">
+                                <option value="other">Другое</option>
+                                <option value="study">Учёба</option>
+                                <option value="work">Работа</option>
+                                <option value="household">Быт</option>
+                                <option value="health">Здоровье</option>
+                                <option value="personal">Личное</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Приоритет</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="medium">Средний</option>
+                                <option value="high">Высокий</option>
+                                <option value="low">Низкий</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Срок выполнения</label>
+                            <input type="datetime-local" class="form-control" id="taskDeadline">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Оценка времени (мин)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="taskDuration" min="1" placeholder="60">
+                                <button class="btn btn-outline-info" type="button" id="predictBtn" title="Предсказать реальное время">
+                                    <i class="bi bi-robot"></i>
+                                </button>
+                            </div>
+                            <div id="predictionResult" class="form-text text-info mt-1 d-none"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveTaskBtn">
+                    <i class="bi bi-save me-1"></i>Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Task Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>Завершить задачу
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="completeTaskId">
+                <div class="mb-3">
+                    <label class="form-label">Фактическое время выполнения (минуты)</label>
+                    <input type="number" class="form-control" id="actualDuration" min="1" placeholder="Введите фактическое время в минутах">
+                    <div class="form-text">Это поможет улучшить точность предсказаний в будущем.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success" id="confirmCompleteBtn">
+                    <i class="bi bi-check-lg me-1"></i>Завершить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Goal Modal -->
+<div class="modal fade" id="assignGoalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-trophy-fill text-warning me-2"></i>Привязать к цели
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignTaskId">
+                <div class="mb-3">
+                    <label class="form-label">Выберите существующую цель</label>
+                    <select class="form-select" id="goalSelect">
+                        <option value="">— Выберите цель —</option>
+                        {% for goal in goals %}
+                        <option value="{{ goal.id }}">{{ goal.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-center text-muted my-2">— или —</div>
+                <div class="mb-3">
+                    <label class="form-label">Создать новую цель</label>
+                    <input type="text" class="form-control" id="newGoalTitle" placeholder="Название новой цели">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" id="confirmAssignGoalBtn">
+                    <i class="bi bi-link me-1"></i>Привязать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Schedule Task Modal -->
+<div class="modal fade" id="scheduleTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-plus me-2 text-info"></i>Запланировать
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-2" id="scheduleTaskTitle"></p>
+                <label class="form-label small">Дата начала</label>
+                <input type="date" class="form-control mb-2" id="scheduleTaskDate">
+                <label class="form-label small">Время начала</label>
+                <input type="time" class="form-control" id="scheduleTaskTime" min="07:00" max="23:00" step="3600">
+                <div class="form-text"><i class="bi bi-info-circle me-1"></i>Доступное время: 7:00 — 23:00</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-info btn-sm" id="confirmScheduleTaskBtn">
+                    <i class="bi bi-calendar-check me-1"></i>Поставить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Task Confirm Modal -->
+<div class="modal fade" id="deleteTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-trash me-2"></i>Удалить задачу
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить задачу <strong id="deleteTaskTitle"></strong>?</p>
+                <p class="text-muted small mb-0">Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteTaskBtn">
+                    <i class="bi bi-trash me-1"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/board.js' %}"></script>
+<script>
+// ── Chat: multi-conversation with localStorage ───────────────────────────────
+
+const CONVS_KEY = 'tp_conversations';   // list of {id, title, messages[]}
+const ACTIVE_KEY = 'tp_active_conv';    // id of active conversation
+
+function getCsrf() {
+    return document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+}
+
+// ── Storage helpers ──────────────────────────────────────────────────────────
+
+function loadConversations() {
+    try { return JSON.parse(localStorage.getItem(CONVS_KEY)) || []; } catch { return []; }
+}
+function saveConversations(convs) {
+    localStorage.setItem(CONVS_KEY, JSON.stringify(convs));
+}
+function getActiveId() {
+    return localStorage.getItem(ACTIVE_KEY);
+}
+function setActiveId(id) {
+    localStorage.setItem(ACTIVE_KEY, id);
+}
+function getActiveConv() {
+    const convs = loadConversations();
+    const id = getActiveId();
+    return convs.find(c => c.id === id) || convs[0] || null;
+}
+function updateActiveConv(messages) {
+    const convs = loadConversations();
+    const id = getActiveId();
+    const conv = convs.find(c => c.id === id);
+    if (conv) {
+        conv.messages = messages;
+        saveConversations(convs);
+    }
+}
+
+// ── Conversation list sidebar ────────────────────────────────────────────────
+
+function renderConversationList() {
+    const list = document.getElementById('conversationList');
+    const convs = loadConversations();
+    const activeId = getActiveId();
+    list.innerHTML = '';
+
+    if (!convs.length) {
+        list.innerHTML = '<div class="text-muted px-2 py-2" style="font-size:0.7rem">Нет диалогов</div>';
+        return;
+    }
+
+    convs.forEach(conv => {
+        const item = document.createElement('div');
+        item.className = 'conv-item' + (conv.id === activeId ? ' conv-item-active' : '');
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'flex-grow-1 text-truncate conv-title-span';
+        titleSpan.title = conv.title;
+        titleSpan.textContent = conv.title;
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'conv-action-btn conv-edit-btn';
+        editBtn.title = 'Переименовать';
+        editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
+        editBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = conv.title;
+            input.className = 'conv-rename-input';
+            item.replaceChild(input, titleSpan);
+            input.focus();
+            input.select();
+            const finish = () => {
+                const val = input.value.trim() || conv.title;
+                const convs2 = loadConversations();
+                const c = convs2.find(x => x.id === conv.id);
+                if (c) { c.title = val; saveConversations(convs2); }
+                if (conv.id === getActiveId()) document.getElementById('chatTitle').textContent = val;
+                renderConversationList();
+            };
+            input.addEventListener('blur', finish);
+            input.addEventListener('keydown', e2 => { if (e2.key === 'Enter') input.blur(); if (e2.key === 'Escape') { input.value = conv.title; input.blur(); } });
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'conv-action-btn conv-delete-btn';
+        delBtn.title = 'Удалить';
+        delBtn.innerHTML = '<i class="bi bi-trash3"></i>';
+        delBtn.addEventListener('click', e => { e.stopPropagation(); deleteConversation(conv.id); });
+
+        item.appendChild(titleSpan);
+        item.appendChild(editBtn);
+        item.appendChild(delBtn);
+        item.addEventListener('click', e => { e.stopPropagation(); switchConversation(conv.id); });
+        list.appendChild(item);
+    });
+}
+
+// ── Conversation actions ─────────────────────────────────────────────────────
+
+function newConversation() {
+    const id = 'conv_' + Date.now();
+    const convs = loadConversations();
+    convs.unshift({ id, title: 'Новый чат', messages: [] });
+    saveConversations(convs);
+    setActiveId(id);
+    renderConversationList();
+    renderMessages([]);
+    document.getElementById('chatTitle').textContent = 'Новый чат';
+}
+
+function switchConversation(id) {
+    setActiveId(id);
+    const convs = loadConversations();
+    const conv = convs.find(c => c.id === id);
+    if (!conv) return;
+    renderConversationList();
+    renderMessages(conv.messages);
+    document.getElementById('chatTitle').textContent = conv.title;
+}
+
+function deleteCurrentConversation() {
+    deleteConversation(getActiveId());
+}
+
+function deleteConversation(id) {
+    let convs = loadConversations();
+    convs = convs.filter(c => c.id !== id);
+    saveConversations(convs);
+    if (convs.length) {
+        setActiveId(convs[0].id);
+        switchConversation(convs[0].id);
+    } else {
+        newConversation();
+    }
+}
+
+// ── Render messages ──────────────────────────────────────────────────────────
+
+function renderMessages(messages) {
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = '';
+    if (!messages || !messages.length) {
+        container.innerHTML = '';
+        return;
+    }
+    messages.forEach(m => appendMessage(m.role, m.text, false));
+}
+
+function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    const btn = document.getElementById('chatToggleBtn');
+    const hidden = panel.classList.toggle('d-none');
+    btn.classList.toggle('chat-toggle-btn--active', !hidden);
+    if (!hidden) {
+        const container = document.getElementById('chatMessages');
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+/** Convert minimal markdown-like text to safe HTML */
+function formatReply(text) {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    return escaped
+        // Bold **text**
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        // Code `text`
+        .replace(/`([^`]+)`/g, '<code class="bg-dark px-1 rounded">$1</code>')
+        // Bullet lines starting with • or -
+        .replace(/^([•\-]) /gm, '<span class="text-info me-1">•</span>')
+        // Newlines
+        .replace(/\n/g, '<br>');
+}
+
+function appendMessage(role, text, save = true) {
+    const container = document.getElementById('chatMessages');
+    document.getElementById('chatWelcome')?.remove();
+
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = role === 'user' ? 'chat-msg-row chat-msg-user' : 'chat-msg-row chat-msg-ai';
+
+    const bubble = document.createElement('div');
+    bubble.className = role === 'user' ? 'chat-bubble chat-bubble-user' : 'chat-bubble chat-bubble-ai';
+
+    const content = document.createElement('div');
+    if (role === 'user') {
+        content.textContent = text;
+    } else {
+        content.innerHTML = formatReply(text);
+    }
+
+    const time = document.createElement('div');
+    time.className = 'chat-bubble-time';
+    time.textContent = timeStr;
+
+    bubble.appendChild(content);
+    bubble.appendChild(time);
+    wrapper.appendChild(bubble);
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+
+    if (save) {
+        // Save to active conversation
+        const conv = getActiveConv();
+        if (conv) {
+            conv.messages.push({ role, text });
+            updateActiveConv(conv.messages);
+            // Update title from first user message
+            if (conv.title === 'Новый чат' && role === 'user') {
+                const convs = loadConversations();
+                const c = convs.find(x => x.id === conv.id);
+                if (c) {
+                    c.title = text.length > 28 ? text.slice(0, 28) + '…' : text;
+                    saveConversations(convs);
+                    document.getElementById('chatTitle').textContent = c.title;
+                    renderConversationList();
+                }
+            }
+        }
+    }
+}
+
+function appendTyping() {
+    const container = document.getElementById('chatMessages');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-msg-row chat-msg-ai';
+    wrapper.id = 'typingIndicator';
+    wrapper.innerHTML = `<div class="chat-bubble chat-bubble-ai chat-typing">
+        <span class="chat-dot"></span><span class="chat-dot"></span><span class="chat-dot"></span>
+    </div>`;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+
+}
+
+function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) {
+        el.remove();
+    }
+}
+
+/** Show a small notification strip when board is refreshed */
+function showBoardRefreshBadge(actions) {
+    const existing = document.getElementById('boardRefreshBadge');
+    if (existing) existing.remove();
+
+    const counts = { created: 0, updated: 0, deleted: 0 };
+    actions.forEach(a => counts[a.action] = (counts[a.action] || 0) + 1);
+    const parts = [];
+    if (counts.created) parts.push(`+${counts.created} создано`);
+    if (counts.updated) parts.push(`${counts.updated} обновлено`);
+    if (counts.deleted) parts.push(`${counts.deleted} удалено`);
+
+    const badge = document.createElement('div');
+    badge.id = 'boardRefreshBadge';
+    badge.className = 'alert alert-info alert-dismissible py-2 px-3 small position-fixed top-0 start-50 translate-middle-x mt-2';
+    badge.style.zIndex = '2000';
+    badge.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i>Доска обновлена: ${parts.join(', ')}
+        <button type="button" class="btn-close btn-sm ms-2" onclick="this.parentElement.remove()"></button>`;
+    document.body.appendChild(badge);
+    setTimeout(() => badge.remove(), 4000);
+}
+
+// ── Main send function ───────────────────────────────────────────────────────
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const btn = document.getElementById('chatSendBtn');
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = '';
+    btn.disabled = true;
+    appendMessage('user', message);
+    appendTyping();
+
+    try {
+        const resp = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrf(),
+            },
+            body: JSON.stringify({ message }),
+        });
+        const data = await resp.json();
+        removeTyping();
+
+        if (data.reply) {
+            appendMessage('assistant', data.reply);
+
+            // Refresh board if tasks were modified — без перезагрузки страницы
+            if (data.refresh_board && data.actions?.length) {
+                showBoardRefreshBadge(data.actions);
+                refreshBoardColumns();
+            }
+        } else {
+            appendMessage('assistant', '⚠️ ' + (data.error || 'Произошла ошибка'));
+        }
+    } catch (e) {
+        removeTyping();
+        appendMessage('assistant', '⚠️ Не удалось подключиться к серверу');
+    }
+
+    btn.disabled = false;
+    input.focus();
+}
+
+async function clearChat() {
+    // Clears server session history only for current conversation
+    await fetch('/api/chat/', {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': getCsrf() },
+    });
+    deleteCurrentConversation();
+}
+
+// ── Board refresh without page reload ───────────────────────────────────────
+
+async function refreshBoardColumns() {
+    try {
+        const resp = await fetch('/api/board/columns/');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        ['new', 'planned', 'in_progress', 'done'].forEach(status => {
+            const col = document.getElementById(`column-${status}`);
+            const cnt = document.getElementById(`count-${status}`);
+            if (col && data[status] !== undefined) {
+                col.innerHTML = data[status].html || '';
+                if (cnt) cnt.textContent = data[status].count;
+            }
+        });
+    } catch(e) {}
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    let convs = loadConversations();
+
+    // Ensure there's at least one conversation
+    if (!convs.length) {
+        const id = 'conv_' + Date.now();
+        convs = [{ id, title: 'Новый чат', messages: [] }];
+        saveConversations(convs);
+        setActiveId(id);
+    } else if (!getActiveId() || !convs.find(c => c.id === getActiveId())) {
+        setActiveId(convs[0].id);
+    }
+
+    const active = getActiveConv();
+    renderConversationList();
+    renderMessages(active ? active.messages : []);
+    if (active) document.getElementById('chatTitle').textContent = active.title;
+
+
+});
+
+// ── Quick-action chips ───────────────────────────────────────────────────────
+
+function quickSend(text) {
+    document.getElementById('chatInput').value = text;
+    sendChatMessage();
+}
+
+// ── Close chat on outside click ──────────────────────────────────────────────
+
+document.addEventListener('click', e => {
+    const panel = document.getElementById('chatPanel');
+    const toggleBtn = document.getElementById('chatToggleBtn');
+    if (panel.classList.contains('d-none')) return;
+    if (!panel.contains(e.target) && !toggleBtn.contains(e.target)) {
+        panel.classList.add('d-none');
+        toggleBtn.classList.remove('chat-toggle-btn--active');
+    }
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% load static %}
+<div class="task-card card mb-2 priority-{{ task.priority_color }}"
+     data-task-id="{{ task.id }}"
+     data-status="{{ task.status }}"
+     {% if task.status != 'done' %}draggable="true"{% endif %}>
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1 me-2">
+                <div class="fw-semibold task-title mb-1">{{ task.title }}</div>
+                {% if task.is_overdue_risk %}
+                <div class="text-danger small mb-1 overdue-risk-badge">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Риск срыва
+                </div>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                    <span class="badge bg-secondary small">{{ task.get_category_display }}</span>
+                    {% if task.deadline %}
+                    <span class="badge bg-dark border border-secondary small">
+                        <i class="bi bi-clock"></i> {{ task.deadline|date:"d.m H:i" }}
+                    </span>
+                    {% endif %}
+                    {% if task.estimated_duration %}
+                    <span class="badge bg-dark border border-secondary small">
+                        <i class="bi bi-hourglass-split"></i> {{ task.estimated_duration }}м
+                    </span>
+                    {% endif %}
+                </div>
+                {% if task.goal %}
+                <div class="mt-1 task-goal-badge" data-goal-id="{{ task.goal.id }}">
+                    <span class="badge bg-info text-dark small">
+                        <i class="bi bi-trophy"></i> {{ task.goal.title }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            <button class="btn btn-sm btn-link text-muted task-menu-btn p-0"
+                    type="button"
+                    onclick="toggleTaskMenu(this)"
+                    title="Действия">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+        </div>
+    </div>
+</div>

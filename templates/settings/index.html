@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки — TaskPlanner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-gear-fill me-2 text-secondary"></i>Настройки временных слотов</h4>
+</div>
+
+<div class="row g-4">
+    <!-- Add time slot form -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Добавить слот</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">День недели</label>
+                    <select class="form-select" id="slotDay">
+                        <option value="0">Понедельник</option>
+                        <option value="1">Вторник</option>
+                        <option value="2">Среда</option>
+                        <option value="3">Четверг</option>
+                        <option value="4">Пятница</option>
+                        <option value="5">Суббота</option>
+                        <option value="6">Воскресенье</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Начало</label>
+                    <input type="time" class="form-control" id="slotStart" value="09:00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Окончание</label>
+                    <input type="time" class="form-control" id="slotEnd" value="18:00">
+                </div>
+                <button class="btn btn-primary w-100" id="addSlotBtn">
+                    <i class="bi bi-plus-lg me-1"></i>Добавить
+                </button>
+                <div id="slotError" class="text-danger mt-2 d-none"></div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Как работает планировщик</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    Система автоматически распределяет задачи по временным слотам на основе жадного алгоритма:
+                </p>
+                <ol class="small text-muted ps-3">
+                    <li>Задачи сортируются по дедлайну и приоритету</li>
+                    <li>Для каждой задачи ищется ближайший свободный слот</li>
+                    <li>Если слот до дедлайна не найден — устанавливается флаг риска</li>
+                    <li>При завершении задач остальные перепланируются</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time slots list -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Текущие слоты</h6>
+            </div>
+            <div class="card-body p-0">
+                <div id="slotsList">
+                    {% if time_slots %}
+                    <div class="list-group list-group-flush" id="slotsListInner">
+                        {% for slot in time_slots %}
+                        <div class="list-group-item list-group-item-dark d-flex justify-content-between align-items-center"
+                             id="slot-{{ slot.id }}">
+                            <div>
+                                <span class="fw-semibold">{{ slot.get_day_of_week_display }}</span>
+                                <span class="text-muted ms-3">
+                                    {{ slot.start_time|time:"H:i" }} — {{ slot.end_time|time:"H:i" }}
+                                </span>
+                                <span class="badge bg-secondary ms-2">{{ slot.duration_minutes }}м</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="deleteSlot({{ slot.id }})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4" id="noSlotsMsg">
+                        <i class="bi bi-calendar-x fs-3"></i>
+                        <p class="mt-2 mb-0">Нет временных слотов</p>
+                        <small>Добавьте слоты для включения автоматического планирования</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addSlotBtn').addEventListener('click', async () => {
+    const day = document.getElementById('slotDay').value;
+    const start = document.getElementById('slotStart').value;
+    const end = document.getElementById('slotEnd').value;
+    const errEl = document.getElementById('slotError');
+
+    errEl.classList.add('d-none');
+
+    const result = await apiPost('/schedule/api/slots/create/', {
+        day_of_week: parseInt(day),
+        start_time: start,
+        end_time: end,
+    });
+
+    if (result.success) {
+        const slot = result.slot;
+        const noMsg = document.getElementById('noSlotsMsg');
+        if (noMsg) noMsg.remove();
+
+        let inner = document.getElementById('slotsListInner');
+        if (!inner) {
+            inner = document.createElement('div');
+            inner.className = 'list-group list-group-flush';
+            inner.id = 'slotsListInner';
+            document.getElementById('slotsList').appendChild(inner);
+        }
+
+        const item = document.createElement('div');
+        item.className = 'list-group-item list-group-item-dark d-flex justify-content-between align-items-center';
+        item.id = `slot-${slot.id}`;
+        item.innerHTML = `
+            <div>
+                <span class="fw-semibold">${slot.day_name}</span>
+                <span class="text-muted ms-3">${slot.start_time} — ${slot.end_time}</span>
+                <span class="badge bg-secondary ms-2">${slot.duration_minutes}м</span>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteSlot(${slot.id})">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        inner.appendChild(item);
+    } else {
+        errEl.textContent = result.error || 'Ошибка при добавлении слота';
+        errEl.classList.remove('d-none');
+    }
+});
+
+async function deleteSlot(id) {
+    if (!confirm('Удалить этот временной слот?')) return;
+    const result = await apiPost(`/schedule/api/slots/${id}/delete/`, {});
+    if (result.success) {
+        document.getElementById(`slot-${id}`).remove();
+        const inner = document.getElementById('slotsListInner');
+        if (inner && inner.children.length === 0) {
+            inner.remove();
+            const slotsList = document.getElementById('slotsList');
+            slotsList.innerHTML = `
+                <div class="text-center text-muted py-4" id="noSlotsMsg">
+                    <i class="bi bi-calendar-x fs-3"></i>
+                    <p class="mt-2 mb-0">Нет временных слотов</p>
+                    <small>Добавьте слоты для включения автоматического планирования</small>
+                </div>
+            `;
+        }
+    }
+}
+</script>
+{% endblock %}

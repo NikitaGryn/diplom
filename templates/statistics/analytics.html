@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналитика — TaskPlanner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-pie-chart-fill me-2 text-info"></i>Аналитика по задачам</h4>
+        <span class="text-muted small">Данные {{ period_label }}</span>
+    </div>
+    <div class="btn-group btn-group-sm" role="group">
+        <a href="?period=week" class="btn {% if period == 'week' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Неделя</a>
+        <a href="?period=month" class="btn {% if period == 'month' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Месяц</a>
+        <a href="?period=all" class="btn {% if period == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Всё время</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-pie-chart-fill text-info"></i>
+                <h6 class="mb-0">По категориям</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="height:280px">
+                {% if has_period_tasks %}
+                <canvas id="categoryChart"></canvas>
+                {% else %}
+                <div class="analytics-card-empty">
+                    <div class="analytics-card-empty-donut">
+                        <div class="analytics-card-empty-donut-hole"></div>
+                    </div>
+                    <div class="analytics-card-empty-copy">
+                        <div class="analytics-card-empty-title">Нет задач</div>
+                        <div class="analytics-card-empty-subtitle">по категориям за этот период</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-pie-chart-fill text-warning"></i>
+                <h6 class="mb-0">По приоритетам</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="height:280px">
+                {% if has_period_tasks %}
+                <canvas id="priorityChart"></canvas>
+                {% else %}
+                <div class="analytics-card-empty">
+                    <div class="analytics-card-empty-donut">
+                        <div class="analytics-card-empty-donut-hole"></div>
+                    </div>
+                    <div class="analytics-card-empty-copy">
+                        <div class="analytics-card-empty-title">Нет задач</div>
+                        <div class="analytics-card-empty-subtitle">по приоритетам за этот период</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-tags text-secondary"></i>
+                <h6 class="mb-0">Выполнение по категориям</h6>
+            </div>
+            <div class="card-body">
+                {% if has_period_tasks %}
+                    {% for cat in category_stats %}{% if cat.total > 0 %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small">{{ cat.label }}</span>
+                            <span class="small text-muted">{{ cat.done }}/{{ cat.total }} · {{ cat.percent }}%</span>
+                        </div>
+                        <div class="progress" style="height:8px;border-radius:4px">
+                            <div class="progress-bar bg-success" style="width:{{ cat.percent }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}{% endfor %}
+                {% else %}
+                <div class="analytics-list-empty">
+                    <div class="analytics-list-empty-line"></div>
+                    <div class="analytics-list-empty-copy">
+                        <div class="analytics-list-empty-title">Нет задач</div>
+                        <div class="analytics-list-empty-subtitle">по категориям за выбранный период</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-flag text-secondary"></i>
+                <h6 class="mb-0">Выполнение по приоритетам</h6>
+            </div>
+            <div class="card-body">
+                {% if has_period_tasks %}
+                    {% for pri in priority_stats %}{% if pri.total > 0 %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small">{{ pri.label }}</span>
+                            <span class="small text-muted">{{ pri.done }}/{{ pri.total }} · {{ pri.percent }}%</span>
+                        </div>
+                        <div class="progress" style="height:8px;border-radius:4px">
+                            <div class="progress-bar {% if pri.key == 'high' %}bg-danger{% elif pri.key == 'medium' %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ pri.percent }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}{% endfor %}
+                {% else %}
+                <div class="analytics-list-empty">
+                    <div class="analytics-list-empty-line"></div>
+                    <div class="analytics-list-empty-copy">
+                        <div class="analytics-list-empty-title">Нет задач</div>
+                        <div class="analytics-list-empty-subtitle">по приоритетам за выбранный период</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if has_period_tasks %}
+<script id="chartDataJson" type="application/json">{{ chart_data_json|safe }}</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if has_period_tasks %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const raw = document.getElementById('chartDataJson');
+    if (!raw) return;
+    const data = JSON.parse(raw.textContent);
+
+    const isDark = document.documentElement.getAttribute('data-bs-theme') !== 'light';
+    const legendColor = isDark ? '#dee2e6' : '#212529';
+
+    const catPalette = ['#4dabf7','#74c0fc','#63e6be','#a9e34b','#ffd43b','#ff8787','#da77f2'];
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx && data.category.labels.length) {
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.category.labels,
+                datasets: [{
+                    data: data.category.total,
+                    backgroundColor: catPalette.slice(0, data.category.labels.length),
+                    borderWidth: 2,
+                    borderColor: isDark ? '#212529' : '#fff',
+                    hoverOffset: 10,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: legendColor, boxWidth: 14, padding: 14, font: { size: 13 } }
+                    },
+                    tooltip: {
+                        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} задач` }
+                    }
+                }
+            }
+        });
+    }
+
+    const priColors = { high: '#dc3545', medium: '#ffc107', low: '#198754' };
+    const priCtx = document.getElementById('priorityChart');
+    if (priCtx && data.priority.labels.length) {
+        new Chart(priCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.priority.labels,
+                datasets: [{
+                    data: data.priority.total,
+                    backgroundColor: data.priority.keys.map(k => priColors[k] || '#6c757d'),
+                    borderWidth: 2,
+                    borderColor: isDark ? '#212529' : '#fff',
+                    hoverOffset: 10,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: legendColor, boxWidth: 14, padding: 14, font: { size: 13 } }
+                    },
+                    tooltip: {
+                        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} задач` }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

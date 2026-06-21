@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналитика — TaskPlanner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-success"></i>Аналитика</h4>
+        <span class="text-muted small">Данные {{ period_label }}</span>
+    </div>
+    <div class="btn-group btn-group-sm" role="group">
+        <a href="?period=week"  class="btn {% if period == 'week'  %}btn-primary{% else %}btn-outline-secondary{% endif %}">Неделя</a>
+        <a href="?period=month" class="btn {% if period == 'month' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Месяц</a>
+        <a href="?period=all"   class="btn {% if period == 'all'   %}btn-primary{% else %}btn-outline-secondary{% endif %}">Всё время</a>
+    </div>
+</div>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-kpi-card border-success">
+            <div class="stat-kpi-icon text-success"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-kpi-value text-success">{{ completed_count }}</div>
+            <div class="stat-kpi-label">Выполнено задач</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-kpi-card border-danger">
+            <div class="stat-kpi-icon text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-kpi-value text-danger">{{ overdue_count }}</div>
+            <div class="stat-kpi-label">Просрочено</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-kpi-card border-info">
+            <div class="stat-kpi-icon text-info"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-kpi-value text-info">{{ total_hours }}<small class="stat-kpi-unit">ч</small></div>
+            <div class="stat-kpi-label">Потрачено времени</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-kpi-card border-primary">
+            <div class="stat-kpi-icon text-primary"><i class="bi bi-lightning"></i></div>
+            <div class="stat-kpi-value text-primary">{{ active_count }}</div>
+            <div class="stat-kpi-label">Активные задачи</div>
+        </div>
+    </div>
+</div>
+
+<!-- Line chart: completions by day -->
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-graph-up text-success"></i>
+        <h6 class="mb-0">Выполненные задачи по дням</h6>
+    </div>
+    <div class="card-body" style="height:220px">
+        <canvas id="dailyChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent tasks table -->
+<div class="card">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-check-circle text-success"></i>
+        <h6 class="mb-0">Последние выполненные задачи</h6>
+    </div>
+    <div class="card-body p-0">
+        {% if recent_tasks %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-sm mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Задача</th>
+                        <th>Категория</th>
+                        <th>Приоритет</th>
+                        <th class="text-center">Оценка</th>
+                        <th class="text-center">Фактически</th>
+                        <th>Выполнена</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent_tasks %}
+                    <tr>
+                        <td class="fw-semibold">{{ task.title }}</td>
+                        <td><span class="badge bg-secondary">{{ task.get_category_display }}</span></td>
+                        <td><span class="badge bg-{{ task.priority_color }}">{{ task.get_priority_display }}</span></td>
+                        <td class="text-center">{% if task.estimated_duration %}{{ task.estimated_duration }}м{% else %}—{% endif %}</td>
+                        <td class="text-center">{% if task.actual_duration %}{{ task.actual_duration }}м{% else %}—{% endif %}</td>
+                        <td class="text-muted small">{% if task.completed_at %}{{ task.completed_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>Нет выполненных задач за этот период
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script id="chartDataJson" type="application/json">{{ chart_data_json|safe }}</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const raw = document.getElementById('chartDataJson');
+    if (!raw) return;
+    const data = JSON.parse(raw.textContent);
+
+    const isDark = document.documentElement.getAttribute('data-bs-theme') !== 'light';
+    const gridColor  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+    const tickColor  = isDark ? '#adb5bd' : '#6c757d';
+    const legendColor = isDark ? '#dee2e6' : '#212529';
+
+    Chart.defaults.color = tickColor;
+    Chart.defaults.borderColor = gridColor;
+
+    // ── Line: daily completions ──────────────────────────────────
+    const dailyCtx = document.getElementById('dailyChart');
+    if (dailyCtx && data.daily.labels.length) {
+        new Chart(dailyCtx, {
+            type: 'line',
+            data: {
+                labels: data.daily.labels,
+                datasets: [{
+                    label: 'Выполнено задач',
+                    data: data.daily.counts,
+                    borderColor: '#20c997',
+                    backgroundColor: 'rgba(32,201,151,0.12)',
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#20c997',
+                    fill: true,
+                    tension: 0.35,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 10 } },
+                    y: { grid: { color: gridColor }, ticks: { color: tickColor, stepSize: 1 }, beginAtZero: true },
+                }
+            }
+        });
+    } else if (dailyCtx) {
+        dailyCtx.closest('.card-body').innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-bar-chart fs-2 d-block mb-2"></i>Нет данных за период</div>';
+    }
+
+    // ── Category donut ───────────────────────────────────────────
+    const catPalette = ['#4dabf7','#74c0fc','#63e6be','#a9e34b','#ffd43b','#ff8787','#da77f2'];
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx && data.category.labels.length) {
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.category.labels,
+                datasets: [{
+                    data: data.category.total,
+                    backgroundColor: catPalette.slice(0, data.category.labels.length),
+                    borderWidth: 2,
+                    borderColor: isDark ? '#212529' : '#fff',
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: legendColor, boxWidth: 14, padding: 12, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.label}: ${ctx.raw} задач`
+                        }
+                    }
+                }
+            }
+        });
+    } else if (catCtx) {
+        catCtx.closest('.card-body').innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-pie-chart fs-2 d-block mb-2"></i>Нет данных</div>';
+    }
+
+    // ── Priority donut ───────────────────────────────────────────
+    const priColors = { high: '#dc3545', medium: '#ffc107', low: '#198754' };
+    const priCtx = document.getElementById('priorityChart');
+    if (priCtx && data.priority.labels.length) {
+        new Chart(priCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.priority.labels,
+                datasets: [{
+                    data: data.priority.total,
+                    backgroundColor: data.priority.keys.map(k => priColors[k] || '#6c757d'),
+                    borderWidth: 2,
+                    borderColor: isDark ? '#212529' : '#fff',
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: legendColor, boxWidth: 14, padding: 12, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.label}: ${ctx.raw} задач`
+                        }
+                    }
+                }
+            }
+        });
+    } else if (priCtx) {
+        priCtx.closest('.card-body').innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-pie-chart fs-2 d-block mb-2"></i>Нет данных</div>';
+    }
+})();
+</script>
+{% endblock %}

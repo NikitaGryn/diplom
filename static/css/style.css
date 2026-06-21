@@ -1,0 +1,883 @@
+/* TaskPlanner — Custom Styles */
+
+/* ===========================
+   Кнопка открытия чата
+   =========================== */
+
+.chat-toggle-btn {
+    background: #1e2228;
+    border: 1px solid #3a4149;
+    border-radius: 20px;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 5px 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.chat-toggle-btn:hover {
+    background: #262c35;
+    color: #e2e8f0;
+    border-color: #4b5563;
+}
+.chat-toggle-btn--active {
+    background: #0d9488;
+    border-color: #0d9488;
+    color: #f0fdfa;
+}
+.chat-toggle-btn--active:hover {
+    background: #0f766e;
+    border-color: #0f766e;
+}
+
+
+/* ===========================
+   Chat colors (human-style)
+   =========================== */
+
+
+/* Card frame — нейтральный тёмный, без синей обводки */
+.chat-card {
+    background: #1a1d22;
+    border: 1px solid #2d3139 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+}
+
+/* Sidebar */
+.chat-sidebar {
+    background: #15171b;
+    border-right: 1px solid #2d3139 !important;
+}
+
+.chat-sidebar-header {
+    border-bottom: 1px solid #2d3139;
+}
+
+
+/* Conversation list items */
+.conv-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    padding: 5px 8px;
+    margin: 2px 4px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: #8b96a5;
+    border-left: 2px solid transparent;
+    transition: background 0.12s, color 0.12s;
+    position: relative;
+}
+.conv-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: #e2e8f0;
+}
+.conv-item-active {
+    background: rgba(13,148,136,0.15) !important;
+    border-left-color: #0d9488;
+    color: #e2e8f0;
+}
+/* Action buttons (edit + delete) on conv items */
+.conv-action-btn {
+    background: none;
+    border: none;
+    font-size: 0.7rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.15s, transform 0.15s, background 0.15s, color 0.15s;
+    line-height: 1;
+    color: transparent;
+}
+.conv-item:hover .conv-action-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+.conv-edit-btn { color: #60a5fa; }
+.conv-edit-btn:hover { background: rgba(59,130,246,0.18); color: #93c5fd; transform: scale(1.15); }
+.conv-delete-btn { color: #f87171; }
+.conv-delete-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; transform: scale(1.15); }
+
+/* Inline rename input */
+.conv-rename-input {
+    flex: 1;
+    background: #0d0f13;
+    border: 1px solid #0d9488;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 0.72rem;
+    padding: 1px 5px;
+    outline: none;
+    min-width: 0;
+}
+
+/* Chips */
+.chat-chips-bar {
+    border-bottom: 1px solid #2d3139;
+    background: #1a1d22;
+    padding: 6px 8px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+}
+
+.chat-chip {
+    text-align: center;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    padding: 7px 4px;
+    cursor: pointer;
+    border: 1px solid rgba(13,148,136,0.35);
+    font-weight: 600;
+    background: rgba(13,148,136,0.1);
+    color: #5eead4;
+    transition: background 0.15s, transform 0.1s;
+}
+
+/* Строка 1: 3 чипа по 2 колонки */
+.chat-chip:nth-child(1),
+.chat-chip:nth-child(2),
+.chat-chip:nth-child(3) { grid-column: span 2; }
+
+/* Строка 2: 2 чипа по 3 колонки */
+.chat-chip:nth-child(4),
+.chat-chip:nth-child(5) { grid-column: span 3; }
+
+.chat-chip:hover {
+    background: rgba(13,148,136,0.22);
+    transform: translateY(-1px);
+}
+
+/* Messages area */
+.chat-messages-area {
+    background: #13151a;
+    scrollbar-width: thin;
+    scrollbar-color: #2d3139 #13151a;
+}
+.chat-messages-area::-webkit-scrollbar { width: 5px; }
+.chat-messages-area::-webkit-scrollbar-track { background: #13151a; }
+.chat-messages-area::-webkit-scrollbar-thumb { background: #2d3139; border-radius: 3px; }
+
+/* Message rows */
+.chat-msg-row {
+    display: flex;
+    margin-bottom: 6px;
+}
+.chat-msg-user { justify-content: flex-end; }
+.chat-msg-ai   { justify-content: flex-start; }
+
+/* Bubbles */
+.chat-bubble {
+    max-width: 82%;
+    border-radius: 16px;
+    padding: 8px 12px 5px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.chat-bubble-user {
+    background: #0d9488;       /* тёплый тил — не "AI-синий" */
+    color: #f0fdfa;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-bubble-ai {
+    background: #20232b;
+    color: #cbd5e1;
+    border: 1px solid #2d3139;
+    border-bottom-left-radius: 4px;
+}
+
+/* Timestamp */
+.chat-bubble-time {
+    font-size: 0.6rem;
+    opacity: 0.5;
+    text-align: right;
+    margin-top: 3px;
+}
+
+/* Typing dots */
+.chat-typing {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 10px 14px !important;
+}
+.chat-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4b5563;
+    display: inline-block;
+    animation: chat-bounce 1.2s infinite ease-in-out;
+}
+.chat-dot:nth-child(1) { animation-delay: 0s; }
+.chat-dot:nth-child(2) { animation-delay: 0.2s; }
+.chat-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes chat-bounce {
+    0%, 80%, 100% { transform: scale(0.75); opacity: 0.4; }
+    40%           { transform: scale(1.1);  opacity: 1; }
+}
+
+/* Input bar */
+.chat-input-bar {
+    background: #1a1d22;
+    border-top: 1px solid #2d3139;
+    padding: 10px 14px !important;
+}
+
+.chat-input {
+    background: #0d0f13;
+    border: 1.5px solid #2d3139;
+    border-radius: 50px;
+    padding: 10px 20px;
+    color: #e2e8f0;
+    font-size: 0.84rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+}
+.chat-input::placeholder { color: #3d4452; }
+.chat-input:focus {
+    border-color: #0d9488;
+}
+
+.chat-send-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d9488, #0891b2);
+    border: none;
+    color: #fff;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s, filter 0.15s;
+}
+.chat-send-btn:hover {
+    filter: brightness(1.12);
+    transform: scale(1.06);
+}
+.chat-send-btn:active { transform: scale(0.92); }
+.chat-send-btn:disabled { background: #2d3139; box-shadow: none; cursor: not-allowed; }
+
+
+
+/* ===========================
+   Statistics KPI Cards
+   =========================== */
+
+.stat-kpi-card {
+    background: var(--bs-card-bg, #1e2125);
+    border: 1px solid;
+    border-radius: 12px;
+    padding: 20px 16px 16px;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+.stat-kpi-icon {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+    opacity: 0.85;
+}
+
+.stat-kpi-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-kpi-unit {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.stat-kpi-label {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color, #adb5bd);
+    margin-top: 2px;
+}
+
+/* ===========================
+   Analytics Empty Blocks
+   =========================== */
+
+.analytics-card-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    text-align: left;
+}
+
+.analytics-card-empty-copy {
+    max-width: 180px;
+}
+
+.analytics-card-empty-donut {
+    width: 152px;
+    height: 152px;
+    border-radius: 50%;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    background: conic-gradient(
+        #718096 0deg 110deg,
+        #94a3b8 110deg 235deg,
+        #64748b 235deg 360deg
+    );
+}
+
+.analytics-card-empty-donut-hole {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bs-card-bg, #1e2125);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.analytics-card-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8f9fa;
+    line-height: 1.2;
+}
+
+.analytics-card-empty-subtitle {
+    margin-top: 0.25rem;
+    font-size: 0.88rem;
+    color: #9ca3af;
+}
+
+.analytics-list-empty {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    text-align: left;
+    color: #9ca3af;
+}
+
+.analytics-list-empty-line {
+    width: 10px;
+    height: 72px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #64748b, #94a3b8);
+    opacity: 0.9;
+}
+
+.analytics-list-empty-copy {
+    max-width: 240px;
+}
+
+.analytics-list-empty-title {
+    color: #f8f9fa;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.analytics-list-empty-subtitle {
+    margin-top: 0.25rem;
+    font-size: 0.88rem;
+    color: #9ca3af;
+}
+
+/* ===========================
+   Kanban Board Layout
+   =========================== */
+
+.kanban-board {
+    min-height: calc(100vh - 180px);
+    align-items: flex-start;
+}
+
+.kanban-column {
+    min-height: 200px;
+}
+
+.kanban-cards {
+    min-height: 150px;
+    max-height: calc(100vh - 240px);
+    overflow-y: auto;
+    border-radius: 0 0 6px 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #495057 #212529;
+}
+
+.kanban-cards::-webkit-scrollbar {
+    width: 6px;
+}
+
+.kanban-cards::-webkit-scrollbar-track {
+    background: #212529;
+}
+
+.kanban-cards::-webkit-scrollbar-thumb {
+    background-color: #495057;
+    border-radius: 3px;
+}
+
+.column-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* ===========================
+   Task Cards
+   =========================== */
+
+.task-card {
+    border-left: 4px solid transparent;
+    cursor: grab;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+    background-color: #1e2125;
+    border-color: transparent;
+    position: relative;
+}
+
+.task-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.task-card:active {
+    cursor: grabbing;
+}
+
+/* Priority border colors */
+.task-card.priority-danger {
+    border-left-color: #dc3545 !important;
+}
+
+.task-card.priority-warning {
+    border-left-color: #ffc107 !important;
+}
+
+.task-card.priority-success {
+    border-left-color: #198754 !important;
+}
+
+.task-card.priority-secondary {
+    border-left-color: #6c757d !important;
+}
+
+/* SortableJS states */
+.task-ghost {
+    opacity: 0.4;
+    background: #0d6efd20 !important;
+    border: 2px dashed #0d6efd !important;
+}
+
+.task-chosen {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.task-drag {
+    transform: rotate(2deg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================
+   Three-dot menu button
+   =========================== */
+
+.task-menu-btn {
+    opacity: 0;
+    transition: opacity 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    line-height: 1;
+    font-size: 1rem;
+    border-radius: 6px;
+    padding: 2px 5px !important;
+}
+
+.task-card:hover .task-menu-btn {
+    opacity: 1;
+}
+
+.task-menu-btn:hover {
+    box-shadow: 0 0 0 2px #0d6efd, 0 0 8px 3px rgba(13,110,253,0.5);
+    transform: scale(1.15);
+    color: #6ea8fe !important;
+}
+
+/* ===========================
+   Floating menu item hover
+   =========================== */
+
+#_taskFloatingMenu .dropdown-item {
+    transition: background 0.15s ease, padding-left 0.15s ease, color 0.15s ease;
+}
+
+#_taskFloatingMenu .dropdown-item:hover {
+    background: rgba(13,110,253,0.18) !important;
+    padding-left: 1.2rem !important;
+    color: #fff !important;
+}
+
+.task-menu-dropdown {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+}
+
+/* ===========================
+   Schedule sidebar cards (.scard)
+   =========================== */
+
+.scard {
+    border-radius: 8px;
+    padding: 7px 8px 6px 9px;
+    cursor: grab;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    user-select: none;
+}
+
+.scard:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    filter: brightness(1.12);
+}
+
+.scard:active {
+    cursor: grabbing;
+    transform: scale(0.97);
+}
+
+.scard-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+}
+
+.scard-priority-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.scard-priority-label {
+    font-size: 0.65em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.scard-title {
+    font-size: 0.82em;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #f0f0f0;
+    word-break: break-word;
+    margin-bottom: 4px;
+}
+
+.scard-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.scard-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.65em;
+    color: #ccc;
+}
+
+.scard-time {
+    font-size: 0.68em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.scard-time.scheduled {
+    color: #63e6be;
+}
+
+.scard-time.unscheduled {
+    color: rgba(200,200,200,0.45);
+}
+
+/* ===========================
+   Grid cell task cards (.gcell-task)
+   =========================== */
+
+.gcell-task {
+    background: #1e2125;
+    border-radius: 6px;
+    padding: 4px 6px 4px 7px;
+    margin-bottom: 2px;
+    cursor: grab;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+.gcell-task:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+    transform: translateY(-1px);
+}
+
+.gcell-task:active {
+    cursor: grabbing;
+    transform: scale(0.97);
+}
+
+.gcell-title {
+    font-size: 0.74em;
+    font-weight: 600;
+    color: #e8e8e8;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 3px;
+}
+
+.gcell-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 1px;
+}
+
+.gcell-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 0.62em;
+    color: rgba(210,210,210,0.8);
+}
+
+/* Drop hover highlight */
+.drop-hover {
+    outline: 2px dashed #0d6efd !important;
+    outline-offset: -2px;
+    background-color: rgba(13,110,253,0.12) !important;
+}
+
+/* ===========================
+   Task title
+   =========================== */
+
+.task-title {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    word-break: break-word;
+    padding-right: 20px;
+}
+
+/* ===========================
+   Navbar tweaks
+   =========================== */
+
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: 0.03em;
+}
+
+/* ===========================
+   Schedule table
+   =========================== */
+
+.schedule-table {
+    font-size: 0.8rem;
+}
+
+.schedule-cell {
+    min-width: 100px;
+}
+
+.time-col {
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+/* ===========================
+   Offcanvas goals panel
+   =========================== */
+
+#goalsOffcanvas {
+    background-color: #1a1d20;
+    border-left: 1px solid #343a40;
+}
+
+/* ===========================
+   Progress bar animation
+   =========================== */
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* ===========================
+   Forms
+   =========================== */
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ===========================
+   Toast notifications
+   =========================== */
+
+#recommendToast {
+    min-width: 300px;
+}
+
+/* ===========================
+   Statistics page
+   =========================== */
+
+.display-4 {
+    font-size: 2.5rem;
+}
+
+/* ===========================
+   Login page
+   =========================== */
+
+body.login-page {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+}
+
+/* ===========================
+   Responsive adjustments
+   =========================== */
+
+@media (max-width: 768px) {
+    .kanban-board {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .analytics-card-empty {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.9rem;
+    }
+
+    .analytics-card-empty-copy {
+        max-width: none;
+    }
+
+    .analytics-card-empty-donut {
+        width: 124px;
+        height: 124px;
+        padding: 18px;
+    }
+
+    .analytics-card-empty-donut-hole {
+    }
+
+    .analytics-list-empty {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+
+    .analytics-list-empty-line {
+        width: 72px;
+        height: 10px;
+    }
+
+    .analytics-list-empty-copy {
+        max-width: none;
+    }
+
+    .kanban-column {
+        width: 100% !important;
+        flex-shrink: 1 !important;
+    }
+
+    .kanban-cards {
+        max-height: 400px;
+    }
+}
+
+/* ===========================
+   Badge tweaks
+   =========================== */
+
+.badge {
+    font-weight: 500;
+}
+
+/* ===========================
+   Card hover states
+   =========================== */
+
+.card {
+    transition: border-color 0.15s ease;
+}
+
+/* ===========================
+   Scrollbar for main content
+   =========================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #212529;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #495057;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #6c757d;
+}
